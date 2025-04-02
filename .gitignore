@@ -1,1 +1,19 @@
+# Go build outputs
+bin/
+*.exe
+
+# IDE / Editor
+.vscode/
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+vendor/
+
+# Env files
 .env
+.env.*
+
