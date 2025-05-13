@@ -1,0 +1,17 @@
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: my-dynatrace-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: my-dynatrace
+  template:
+    metadata:
+      labels:
+        app: my-dynatrace
+    spec:
+      containers:
+        - name: dynatrace
+          image: dynatrace-image:latest
