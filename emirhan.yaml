@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: instana-agent
+  namespace: instana-agent
+spec:
+  selector:
+    matchLabels:
+      app: instana-agent
+  template:
+    metadata:
+      labels:
+        app: instana-agent
+    spec:
+      containers:
+      - name: instana-agent
+        image: instana/agent:latest
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        env:
+        - name: INSTANA_AGENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: instana-agent-secret
+              key: key
+        - name: INSTANA_AGENT_ENDPOINT
+          value: "https://agent.instana.io"
+        volumeMounts:
+        - name: host-root
+          mountPath: /root
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory

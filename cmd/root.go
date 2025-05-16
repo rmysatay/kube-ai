@@ -1,60 +1,41 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"os"
-
-	openai "github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "kube-ai",
-	Short: "AI-powered Kubernetes helper",
-	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		prompt := args[0]
-		apiKey := os.Getenv("OPENAI_API_KEY")
-		if apiKey == "" {
-			fmt.Println("OPENAI_API_KEY environment variable not set.")
-			return
-		}
+var (
+	Model         string
+	MaxTokens     int
+	CountTokens   bool
+	Verbose       bool
+	MaxIterations int
 
-		client := openai.NewClient(apiKey)
-		resp, err := client.CreateChatCompletion(
-			context.Background(),
-			openai.ChatCompletionRequest{
-				Model: openai.GPT3Dot5Turbo,
-				Messages: []openai.ChatCompletionMessage{
-					{
-						Role:    openai.ChatMessageRoleUser,
-						Content: prompt,
-					},
-				},
-			},
-		)
-
-		if err != nil {
-			fmt.Printf("ChatCompletion error: %v\n", err)
-			return
-		}
-
-		fmt.Println("Response from ChatGPT:")
-		fmt.Println(resp.Choices[0].Message.Content)
-	},
-}
+	RootCmd = &cobra.Command{
+		Use:     "kube-ai",
+		Version: "0.1.0",
+		Short:   "AI-powered Kubernetes CLI assistant",
+		Long:    "Kube-AI provides AI-powered analysis, auditing, YAML generation, and troubleshooting for Kubernetes resources.",
+	}
+)
 
 func init() {
-	rootCmd.AddCommand(GenerateCmd)
-	rootCmd.AddCommand(AnalyzeCmd)
-	rootCmd.AddCommand(ExecuteCmd)
-	rootCmd.AddCommand(SuggestCmd)
-}
+	// Global persistent flags
+	RootCmd.PersistentFlags().StringVarP(&Model, "model", "m", "gpt-4o", "AI model to use (default: gpt-4o)")
+	RootCmd.PersistentFlags().IntVarP(&MaxTokens, "max-tokens", "t", 2048, "Maximum tokens for AI responses (default: 2048)")
+	RootCmd.PersistentFlags().BoolVarP(&CountTokens, "count-tokens", "c", false, "Print token usage after request")
+	RootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Enable verbose output")
+	RootCmd.PersistentFlags().IntVarP(&MaxIterations, "max-iterations", "x", 30, "Maximum iterations for multi-step analysis (reserved)")
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	// Register AI-specific subcommands
+	RootCmd.AddCommand(
+		AnalyzeCmd,
+		AuditCmd,
+		DiagnoseCmd,
+		GenerateCmd,
+		ExecuteCmd,
+		ChatCmd,
+		VersionCmd,
+		ModifyCmd,
+	)
 }

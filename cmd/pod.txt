@@ -1,6 +1,0 @@
-Name:           nginx
-Namespace:      default
-Restart Count:  6
-Reason:         CrashLoopBackOff
-Events:
-  Warning  BackOff  30s (x5)  kubelet  Back-off restarting failed container

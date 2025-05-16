@@ -1,17 +1,37 @@
-```yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: my-dynatrace-daemonset
+  name: instana-agents
+  namespace: default
 spec:
   selector:
     matchLabels:
-      app: my-dynatrace
+      app: instana-agent
   template:
     metadata:
       labels:
-        app: my-dynatrace
+        app: instana-agent
     spec:
       containers:
-        - name: dynatrace
-          image: dynatrace-image:latest
+      - name: instana-agent
+        image: instana/agent:latest
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+        env:
+        - name: INSTANA_AGENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: instana-agent-secret
+              key: agent.key
+        - name: INSTANA_AGENT_ENDPOINT
+          value: "https://saas.instana.io"
+      hostNetwork: true
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
