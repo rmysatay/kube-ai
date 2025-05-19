@@ -1,84 +1,28 @@
+# 🧠 kube-ai
 
-```markdown
-# kube-ai
+> AI-powered Kubernetes CLI assistant for analysis, auditing, YAML generation, troubleshooting, and more.
 
-A simple AI-powered CLI tool to assist with Kubernetes commands and operations using OpenAI's GPT API.
-
-## ✨ Features
-
-- 🌐 Uses OpenAI GPT models to process and generate Kubernetes-related information
-- ⚙️ CLI structure built with Cobra
-- 🔐 API key managed via environment variable
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Go 1.20+
-- OpenAI API key
-
-### Installation
-
-Clone the repo:
-
-```bash
-git clone https://github.com/your-username/kube-ai.git
-cd kube-ai
-```
-
-Install dependencies:
-
-```bash
-go mod tidy
-```
-
-Build the app:
-
-```bash
-go build -o kube-ai
-```
-
-### Usage
-
-Before using the CLI, make sure to set your OpenAI API key:
-
-#### On Linux/macOS
-
-```bash
-export OPENAI_API_KEY=your_api_key_here
-```
-
-#### On Windows PowerShell
-
-```powershell
-$env:OPENAI_API_KEY="your_api_key_here"
-```
-
-Run the CLI:
-
-```bash
-./kube-ai "How to scale deployments in Kubernetes?"
-```
-
-## 🛠️ Project Structure
-
-```bash
-.
-├── cmd
-│   └── root.go         # Main CLI command logic
-├── go.mod              # Module dependencies
-├── go.sum              # Checksums
-└── main.go             # Entry point
-```
-
-## 🧠 Powered by
-
-- [OpenAI GPT](https://platform.openai.com/docs)
-- [Cobra CLI](https://github.com/spf13/cobra)
-
-## 📄 License
-
-This project is licensed under the MIT License.
-```
+`kube-ai` is a smart Kubernetes CLI assistant powered by OpenAI. It helps developers, platform engineers, and SREs to quickly generate manifests, analyze pod issues, audit security misconfigurations, and troubleshoot live clusters with natural language input.
 
 ---
+
+## 🚀 Features
+
+- 🔍 `analyze`: Ask AI to explain Kubernetes YAML, logs, or command outputs.
+- 🧪 `audit`: Perform security audits of resources for best practices.
+- 🛠️ `diagnose`: Detect issues like `CrashLoopBackOff`, `ImagePullBackOff`, `OOMKilled`, etc.
+- ✍️ `generate`: Generate Kubernetes YAML manifests from plain English.
+- 🪄 `modify`: Edit fields like namespace, name, and replicas in YAML files.
+- 📦 `execute`: Apply Kubernetes manifests to your cluster.
+- 💬 `chat`: Ask any K8s-related question and get CLI examples.
+- 🧠 `completion`: Auto-generate shell completions (bash, zsh, fish, powershell).
+- 🕘 `history`: View your past `kube-ai` commands.
+
+---
+
+## 📦 Installation
+
+```bash
+git clone https://github.com/rmysatay/kube-ai.git
+cd kube-ai
+go build -o kube-ai
