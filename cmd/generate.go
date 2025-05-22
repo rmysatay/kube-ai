@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	saveToFile bool
-	outputFile string
+	saveToFile      bool
+	outputFile      string
 	customNamespace string
 	customReplicas  int
 	customName      string
@@ -32,8 +32,6 @@ var GenerateCmd = &cobra.Command{
 		}
 
 		basePrompt := strings.Join(args, " ")
-
-		// Eğer kullanıcı namespace, replicas, name gibi parametreler vermişse prompta ekle
 		extraPrompt := ""
 		if customNamespace != "" {
 			extraPrompt += fmt.Sprintf(" Use namespace '%s'.", customNamespace)
@@ -45,7 +43,11 @@ var GenerateCmd = &cobra.Command{
 			extraPrompt += fmt.Sprintf(" Set metadata name to '%s'.", customName)
 		}
 
-		finalPrompt := basePrompt + extraPrompt
+		finalPrompt := basePrompt + extraPrompt +
+			" ONLY return raw Kubernetes YAML. Do not include any titles, explanations, or code blocks."
+
+		SaveToHistory("generate", fmt.Sprintf("desc='%s' ns=%s replicas=%d name=%s save=%v output=%s",
+			basePrompt, customNamespace, customReplicas, customName, saveToFile, outputFile))
 
 		client := openai.NewClient(apiKey)
 		resp, err := client.CreateChatCompletion(
@@ -55,13 +57,12 @@ var GenerateCmd = &cobra.Command{
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role: openai.ChatMessageRoleSystem,
-						Content: `You are a Kubernetes expert.
-Generate valid Kubernetes YAML manifests such as Deployment, StatefulSet, DaemonSet, Service, ConfigMap or Secret based on user instructions.
-Make sure you include details like replicas, namespace, metadata name when provided.
-Output ONLY the raw YAML without explanations or code block formatting.`,
+						Content: `You are a Kubernetes YAML generator.
+Return only raw YAML manifests without any markdown, code blocks, or titles.
+Do not include any text like 'Deployment manifest', 'Service manifest', or 'yaml'. Only valid YAML content.`,
 					},
 					{
-						Role: openai.ChatMessageRoleUser,
+						Role:    openai.ChatMessageRoleUser,
 						Content: finalPrompt,
 					},
 				},
@@ -76,14 +77,34 @@ Output ONLY the raw YAML without explanations or code block formatting.`,
 
 		output := strings.TrimSpace(resp.Choices[0].Message.Content)
 
-		// Clean up possible markdown code blocks
-		re := regexp.MustCompile("(?s)```(?:yaml)?\\s*([\\s\\S]+?)\\s*```")
-		if matches := re.FindStringSubmatch(output); len(matches) > 1 {
-			output = matches[1]
-		}
+// Clean unwanted markdown, headers, and formatting
+re := regexp.MustCompile("(?i)^(---|Deployment\\.yaml:|Service\\.yaml:|Deployment YAML:|Service YAML:|yaml|```yaml|```)\\s*$")
 
-		output = strings.TrimSpace(output)
+lines := strings.Split(output, "\n")
+cleaned := []string{}
 
+for _, line := range lines {
+	trimmed := strings.TrimSpace(line)
+
+	// Remove unwanted markers
+	if re.MatchString(trimmed) {
+		continue
+	}
+
+	// Strip leading/trailing quotes and backticks
+	trimmed = strings.Trim(trimmed, "`\"")
+	if trimmed != "" {
+		cleaned = append(cleaned, trimmed)
+	}
+}
+
+// Join all cleaned lines with a single newline
+output = strings.Join(cleaned, "\n")
+output = strings.TrimSpace(output)
+
+
+
+		// Print output
 		fmt.Println("\n📄 Generated Kubernetes YAML:")
 		fmt.Println("-----------------------------------")
 		fmt.Println(output)

@@ -25,7 +25,8 @@ var ExecuteCmd = &cobra.Command{
 			return
 		}
 
-		// Dosyayı oku ve göster
+		SaveToHistory("execute", fmt.Sprintf("file=%s", execFile))
+
 		content, err := os.ReadFile(execFile)
 		if err != nil {
 			fmt.Printf("❌ Failed to read file '%s': %v\n", execFile, err)
@@ -37,7 +38,6 @@ var ExecuteCmd = &cobra.Command{
 		fmt.Println(string(content))
 		fmt.Println("-----------------------------------")
 
-		// YAML dosyasını apply et
 		fmt.Println("🚀 Applying manifest to the cluster...")
 
 		applyCmd := exec.Command("kubectl", "apply", "-f", execFile)

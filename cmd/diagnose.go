@@ -31,7 +31,6 @@ var DiagnoseCmd = &cobra.Command{
 		var diagnoseData string
 		var userQuestion string
 
-		// Eğer inputFile verilmişse dosyadan oku
 		if diagnoseInputFile != "" {
 			content, err := os.ReadFile(diagnoseInputFile)
 			if err != nil {
@@ -40,26 +39,25 @@ var DiagnoseCmd = &cobra.Command{
 			}
 			diagnoseData = string(content)
 		} else if diagnoseResName != "" && diagnoseNamespace != "" {
-			// Eğer resourceName ve namespace verilmişse cluster'dan describe çek
-			kubectlCmd := exec.Command("kubectl", "describe", diagnoseResName, "-n", diagnoseNamespace)
-			output, err := kubectlCmd.CombinedOutput()
+			cmd := exec.Command("kubectl", "describe", diagnoseResName, "-n", diagnoseNamespace)
+			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("❌ Failed to describe resource from cluster: %v\nOutput: %s\n", err, output)
 				return
 			}
 			diagnoseData = string(output)
 		} else if len(args) > 0 {
-			// Sadece prompt verilmişse
 			userQuestion = strings.Join(args, " ")
 		} else {
 			fmt.Println("❌ Please provide a file (-f), a resource name (--name and --ns), or a direct question as an argument.")
 			return
 		}
 
-		// Eğer kullanıcı özel bir soru yazmadıysa, otomatik default soru yaz
 		if userQuestion == "" {
 			userQuestion = "Please diagnose the issue in the following Kubernetes pod output."
 		}
+
+		SaveToHistory("diagnose", fmt.Sprintf("name=%s ns=%s file=%s question=%s", diagnoseResName, diagnoseNamespace, diagnoseInputFile, userQuestion))
 
 		fullPrompt := fmt.Sprintf(`Pod Output:
 ---

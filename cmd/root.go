@@ -20,14 +20,14 @@ var (
 )
 
 func init() {
-	// Global persistent flags
+	// Global flags for all subcommands
 	RootCmd.PersistentFlags().StringVarP(&Model, "model", "m", "gpt-4o", "AI model to use (default: gpt-4o)")
 	RootCmd.PersistentFlags().IntVarP(&MaxTokens, "max-tokens", "t", 2048, "Maximum tokens for AI responses (default: 2048)")
 	RootCmd.PersistentFlags().BoolVarP(&CountTokens, "count-tokens", "c", false, "Print token usage after request")
 	RootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Enable verbose output")
 	RootCmd.PersistentFlags().IntVarP(&MaxIterations, "max-iterations", "x", 30, "Maximum iterations for multi-step analysis (reserved)")
 
-	// Register AI-specific subcommands
+	// Register subcommands
 	RootCmd.AddCommand(
 		AnalyzeCmd,
 		AuditCmd,
@@ -37,5 +37,7 @@ func init() {
 		ChatCmd,
 		VersionCmd,
 		ModifyCmd,
+		CompletionCmd,
+		HistoryCmd, // 🟡 Bu komutun history.go içinde tanımlı olduğundan emin olun
 	)
 }

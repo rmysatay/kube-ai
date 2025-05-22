@@ -55,6 +55,8 @@ var AnalyzeCmd = &cobra.Command{
 			return
 		}
 
+		SaveToHistory("analyze", fmt.Sprintf("resName=%s ns=%s file=%s question=%s", resName, namespace, inputFile, question))
+
 		kubeData, err := getKubernetesData()
 		if err != nil {
 			fmt.Printf("❌ Error collecting Kubernetes data: %v\n", err)

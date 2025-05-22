@@ -31,7 +31,7 @@ var AuditCmd = &cobra.Command{
 		var auditData string
 		var userQuestion string
 
-		// Eğer inputFile verilmişse dosyadan oku
+		// inputFile varsa dosyadan oku
 		if auditInputFile != "" {
 			content, err := os.ReadFile(auditInputFile)
 			if err != nil {
@@ -40,26 +40,26 @@ var AuditCmd = &cobra.Command{
 			}
 			auditData = string(content)
 		} else if auditResName != "" && auditNamespace != "" {
-			// Eğer resourceName ve namespace verilmişse cluster'dan oku
-			kubectlCmd := exec.Command("kubectl", "get", auditResName, "-n", auditNamespace, "-o", "yaml")
-			output, err := kubectlCmd.CombinedOutput()
+			// resource ve namespace varsa cluster'dan çek
+			cmd := exec.Command("kubectl", "get", auditResName, "-n", auditNamespace, "-o", "yaml")
+			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("❌ Failed to fetch resource from cluster: %v\nOutput: %s\n", err, output)
 				return
 			}
 			auditData = string(output)
 		} else if len(args) > 0 {
-			// Eğer sadece prompt verilmişse
 			userQuestion = strings.Join(args, " ")
 		} else {
 			fmt.Println("❌ Please provide a file (-f), a resource name (--name and --ns), or a question as an argument.")
 			return
 		}
 
-		// Eğer doğrudan soru yoksa otomatik audit promptu oluştur
 		if userQuestion == "" {
 			userQuestion = "Please audit the following Kubernetes manifest or output for security risks and best practice violations."
 		}
+
+		SaveToHistory("audit", fmt.Sprintf("name=%s ns=%s file=%s question=%s", auditResName, auditNamespace, auditInputFile, userQuestion))
 
 		fullPrompt := fmt.Sprintf(`Kubernetes Resource to Audit:
 ---

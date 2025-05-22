@@ -25,6 +25,8 @@ var ModifyCmd = &cobra.Command{
 			return
 		}
 
+		SaveToHistory("modify", fmt.Sprintf("file=%s ns=%s name=%s replicas=%d", modifyFile, newNamespace, newName, newReplicas))
+
 		data, err := os.ReadFile(modifyFile)
 		if err != nil {
 			fmt.Println("❌ Failed to read YAML file:", err)
@@ -38,7 +40,6 @@ var ModifyCmd = &cobra.Command{
 			return
 		}
 
-		// Değişiklikleri uygula
 		if newNamespace != "" {
 			if meta, ok := manifest["metadata"].(map[string]interface{}); ok {
 				meta["namespace"] = newNamespace
