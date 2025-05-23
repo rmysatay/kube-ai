@@ -43,11 +43,16 @@ var GenerateCmd = &cobra.Command{
 			extraPrompt += fmt.Sprintf(" Set metadata name to '%s'.", customName)
 		}
 
-		finalPrompt := basePrompt + extraPrompt +
-			" ONLY return raw Kubernetes YAML. Do not include any titles, explanations, or code blocks."
+		finalPrompt := fmt.Sprintf(
+			"%s%s ONLY return raw Kubernetes YAML. Do not include any titles, explanations, or code blocks.",
+			basePrompt, extraPrompt,
+		)
 
-		SaveToHistory("generate", fmt.Sprintf("desc='%s' ns=%s replicas=%d name=%s save=%v output=%s",
-			basePrompt, customNamespace, customReplicas, customName, saveToFile, outputFile))
+		// History’e kaydet
+		SaveToHistory("generate", fmt.Sprintf(
+			"desc='%s' ns=%s replicas=%d name=%s save=%v output=%s",
+			basePrompt, customNamespace, customReplicas, customName, saveToFile, outputFile,
+		))
 
 		client := openai.NewClient(apiKey)
 		resp, err := client.CreateChatCompletion(
@@ -69,7 +74,6 @@ Do not include any text like 'Deployment manifest', 'Service manifest', or 'yaml
 				MaxTokens: MaxTokens,
 			},
 		)
-
 		if err != nil {
 			fmt.Println("❌ OpenAI error:", err)
 			return
@@ -77,46 +81,30 @@ Do not include any text like 'Deployment manifest', 'Service manifest', or 'yaml
 
 		output := strings.TrimSpace(resp.Choices[0].Message.Content)
 
-// Clean unwanted markdown, headers, and formatting
-re := regexp.MustCompile("(?i)^(---|Deployment\\.yaml:|Service\\.yaml:|Deployment YAML:|Service YAML:|yaml|```yaml|```)\\s*$")
+		// Sadece ``` veya ```yaml fence satırlarını at, geri kalanı olduğu gibi bırak
+		fenceRe := regexp.MustCompile("(?i)^```(?:yaml)?$")
+		var cleaned []string
+		for _, line := range strings.Split(output, "\n") {
+			if fenceRe.MatchString(strings.TrimSpace(line)) {
+				continue
+			}
+			cleaned = append(cleaned, line)
+		}
+		output = strings.TrimSpace(strings.Join(cleaned, "\n"))
 
-lines := strings.Split(output, "\n")
-cleaned := []string{}
-
-for _, line := range lines {
-	trimmed := strings.TrimSpace(line)
-
-	// Remove unwanted markers
-	if re.MatchString(trimmed) {
-		continue
-	}
-
-	// Strip leading/trailing quotes and backticks
-	trimmed = strings.Trim(trimmed, "`\"")
-	if trimmed != "" {
-		cleaned = append(cleaned, trimmed)
-	}
-}
-
-// Join all cleaned lines with a single newline
-output = strings.Join(cleaned, "\n")
-output = strings.TrimSpace(output)
-
-
-
-		// Print output
+		// Sonucu yazdır
 		fmt.Println("\n📄 Generated Kubernetes YAML:")
 		fmt.Println("-----------------------------------")
 		fmt.Println(output)
 		fmt.Println("-----------------------------------")
 
+		// Dosyaya kaydetme
 		if saveToFile {
 			file := "output.yaml"
 			if outputFile != "" {
 				file = outputFile
 			}
-			err := os.WriteFile(file, []byte(output), 0644)
-			if err != nil {
+			if err := os.WriteFile(file, []byte(output), 0644); err != nil {
 				fmt.Println("❌ Failed to save YAML to file:", err)
 				return
 			}

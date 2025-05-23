@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -33,38 +34,51 @@ var ModifyCmd = &cobra.Command{
 			return
 		}
 
-		var manifest map[string]interface{}
-		err = yaml.Unmarshal(data, &manifest)
-		if err != nil {
-			fmt.Println("❌ Failed to parse YAML:", err)
-			return
-		}
+		// Çoklu YAML desteği için split
+		docs := strings.Split(string(data), "---")
+		var updatedDocs []string
 
-		if newNamespace != "" {
-			if meta, ok := manifest["metadata"].(map[string]interface{}); ok {
-				meta["namespace"] = newNamespace
+		for _, doc := range docs {
+			doc = strings.TrimSpace(doc)
+			if doc == "" {
+				continue
 			}
-		}
 
-		if newName != "" {
-			if meta, ok := manifest["metadata"].(map[string]interface{}); ok {
-				meta["name"] = newName
+			var manifest map[string]interface{}
+			err := yaml.Unmarshal([]byte(doc), &manifest)
+			if err != nil {
+				fmt.Println("❌ Failed to parse YAML:", err)
+				return
 			}
-		}
 
-		if newReplicas > 0 {
+			// metadata.name ve metadata.namespace güncelle
+			if meta, ok := manifest["metadata"].(map[string]interface{}); ok {
+				if newNamespace != "" {
+					meta["namespace"] = newNamespace
+				}
+				if newName != "" {
+					meta["name"] = newName
+				}
+			}
+
+			// spec.replicas güncelle
 			if spec, ok := manifest["spec"].(map[string]interface{}); ok {
-				spec["replicas"] = newReplicas
+				if newReplicas > 0 {
+					spec["replicas"] = newReplicas
+				}
 			}
+
+			modifiedYAML, err := yaml.Marshal(manifest)
+			if err != nil {
+				fmt.Println("❌ Failed to marshal updated YAML:", err)
+				return
+			}
+			updatedDocs = append(updatedDocs, string(modifiedYAML))
 		}
 
-		newYaml, err := yaml.Marshal(manifest)
-		if err != nil {
-			fmt.Println("❌ Failed to marshal YAML:", err)
-			return
-		}
+		final := strings.Join(updatedDocs, "---\n")
 
-		err = os.WriteFile(modifyFile, newYaml, 0644)
+		err = os.WriteFile(modifyFile, []byte(final), 0644)
 		if err != nil {
 			fmt.Println("❌ Failed to save updated YAML:", err)
 			return
