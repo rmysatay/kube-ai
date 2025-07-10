@@ -1,13 +1,10 @@
-Elbette! Aşağıya `version` ve `completion` komutlarını da içeren güncellenmiş `README.md` sürümünü ekliyorum:
-
----
 
 ````markdown
 # 🤖 kube-ai
 
 > AI-powered Kubernetes CLI Assistant built in Go
 
-**kube-ai** is a command-line tool that brings the power of AI (OpenAI GPT models) to Kubernetes. It helps DevOps, SRE, and platform engineers analyze, audit, generate, and troubleshoot Kubernetes resources using natural language.
+kube-ai is a command-line tool that brings the power of AI (OpenAI GPT models) to Kubernetes. It helps DevOps, SRE, and platform engineers analyze, audit, generate, and troubleshoot Kubernetes resources using natural language.
 
 ---
 
